@@ -16,7 +16,7 @@ GITHUB_REPO = os.getenv("GITHUB_REPO", "fun-things")
 GITHUB_VOTE_TOKEN = os.getenv("GITHUB_VOTE_TOKEN", "")  # Fine-grained PAT (actions:write only)
 
 # Vote page URL (GitHub Pages) — used to build links in the email
-VOTE_PAGE_URL = f"https://{GITHUB_OWNER}.github.io/{GITHUB_REPO}/vote/" if GITHUB_OWNER else ""
+VOTE_PAGE_URL = f"https://dsquid2112.github.io/fun-things/vote/" if GITHUB_OWNER else ""
 
 # --- Family ---
 FAMILY = [
