@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fun Things — Vote</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 40px 36px;
+      max-width: 460px;
+      width: 100%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .icon { font-size: 56px; margin-bottom: 16px; }
+    h1 { font-size: 22px; color: #0f172a; margin-bottom: 8px; }
+    .event-title {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #1e3a5f;
+      margin: 16px 0;
+    }
+    .status { font-size: 14px; color: #64748b; margin-top: 12px; line-height: 1.6; }
+    .status.success { color: #15803d; }
+    .status.error { color: #b91c1c; }
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2px solid #e2e8f0;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .back-link {
+      display: inline-block;
+      margin-top: 24px;
+      color: #2563eb;
+      font-size: 13px;
+      text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon" id="icon">⏳</div>
+    <h1 id="headline">Recording your vote…</h1>
+    <div class="event-title" id="event-title">Loading…</div>
+    <div class="status" id="status">
+      <span class="spinner"></span> Sending to Fun Things…
+    </div>
+  </div>
+
+  <script>
+    // ── Configuration ────────────────────────────────────────────────────────
+    // IMPORTANT: Replace these two values with your own GitHub info.
+    // This token needs ONLY the "actions: write" permission on this repo.
+    const GITHUB_OWNER = "YOUR_GITHUB_USERNAME";   // e.g. "dansquillaro"
+    const GITHUB_REPO  = "fun-things";
+    const GITHUB_TOKEN = "YOUR_VOTE_TOKEN_HERE";   // Fine-grained PAT (actions:write only)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const params = new URLSearchParams(window.location.search);
+    const eventId    = params.get("id")   || "";
+    const vote       = params.get("v")    || "";
+    const eventTitle = decodeURIComponent(params.get("t") || "this event");
+    const category   = params.get("c")   || "other";
+
+    document.getElementById("event-title").textContent = eventTitle;
+
+    const isUp = vote === "up";
+    document.getElementById("icon").textContent     = isUp ? "👍" : "👎";
+    document.getElementById("headline").textContent = isUp
+      ? "You loved it!"
+      : "Got it — we'll skip similar events.";
+
+    async function recordVote() {
+      const statusEl = document.getElementById("status");
+      try {
+        const resp = await fetch(
+          `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/record-vote.yml/dispatches`,
+          {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${GITHUB_TOKEN}`,
+              "Accept": "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ref: "main",
+              inputs: {
+                event_id: eventId,
+                vote: vote,
+                event_title: eventTitle,
+                category: category,
+              },
+            }),
+          }
+        );
+
+        if (resp.status === 204) {
+          statusEl.className = "status success";
+          statusEl.textContent = "Vote recorded! Your preferences will shape next week's list.";
+        } else {
+          throw new Error(`GitHub responded with ${resp.status}`);
+        }
+      } catch (err) {
+        statusEl.className = "status error";
+        statusEl.textContent = `Could not save vote (${err.message}). Check the GITHUB_TOKEN in vote/index.html.`;
+        console.error(err);
+      }
+    }
+
+    // Small delay so the UI feels intentional
+    setTimeout(recordVote, 600);
+  </script>
+</body>
+</html>

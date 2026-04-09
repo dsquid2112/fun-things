@@ -1,0 +1,67 @@
+name: Record Vote
+
+on:
+  workflow_dispatch:
+    inputs:
+      event_id:
+        description: "Event ID"
+        required: true
+      vote:
+        description: "up or down"
+        required: true
+      event_title:
+        description: "Event title (for readability)"
+        required: false
+        default: ""
+      category:
+        description: "Event category"
+        required: false
+        default: "other"
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # needed to commit votes.json back to the repo
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Append vote to data/votes.json
+        shell: python
+        run: |
+          import json
+          import os
+          from datetime import datetime
+
+          votes_file = "data/votes.json"
+          with open(votes_file) as f:
+              votes = json.load(f)
+
+          new_vote = {
+              "event_id":    os.environ["EVENT_ID"],
+              "vote":        os.environ["VOTE"],
+              "event_title": os.environ["EVENT_TITLE"],
+              "category":    os.environ["CATEGORY"],
+              "timestamp":   datetime.utcnow().isoformat() + "Z",
+          }
+          votes.append(new_vote)
+
+          with open(votes_file, "w") as f:
+              json.dump(votes, f, indent=2)
+
+          print(f"Recorded: {new_vote['vote']} for '{new_vote['event_title']}' ({new_vote['event_id']})")
+        env:
+          EVENT_ID:    ${{ inputs.event_id }}
+          VOTE:        ${{ inputs.vote }}
+          EVENT_TITLE: ${{ inputs.event_title }}
+          CATEGORY:    ${{ inputs.category }}
+
+      - name: Commit updated votes
+        run: |
+          git config user.name  "Fun Things Bot"
+          git config user.email "actions@github.com"
+          git add data/votes.json
+          git diff --staged --quiet || git commit -m "vote: ${{ inputs.vote }} on '${{ inputs.event_title }}'"
+          git push
