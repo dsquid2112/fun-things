@@ -50,14 +50,6 @@
       margin-right: 6px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .back-link {
-      display: inline-block;
-      margin-top: 24px;
-      color: #2563eb;
-      font-size: 13px;
-      text-decoration: none;
-    }
-    .back-link:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -71,27 +63,24 @@
   </div>
 
   <script>
-    // ── Configuration ────────────────────────────────────────────────────────
-    // IMPORTANT: Replace these two values with your own GitHub info.
-    // This token needs ONLY the "actions: write" permission on this repo.
+    // ── Configuration ─────────────────────────────────────────────────────────
     const GITHUB_OWNER = "dsquid2112";
     const GITHUB_REPO  = "fun-things";
-    const GITHUB_TOKEN = "REPLACE_WITH_VOTE_TOKEN";   // Fine-grained PAT with actions:write — see README
+    const GITHUB_TOKEN = "REPLACE_WITH_VOTE_TOKEN";  // Fine-grained PAT — actions:write only
     // ─────────────────────────────────────────────────────────────────────────
 
-    const params = new URLSearchParams(window.location.search);
-    const eventId    = params.get("id")   || "";
-    const vote       = params.get("v")    || "";
-    const eventTitle = decodeURIComponent(params.get("t") || "this event");
-    const category   = params.get("c")   || "other";
-
-    document.getElementById("event-title").textContent = eventTitle;
+    const params      = new URLSearchParams(window.location.search);
+    const eventId     = params.get("id")  || "";
+    const vote        = params.get("v")   || "";
+    const eventTitle  = decodeURIComponent(params.get("t") || "this event");
+    const category    = params.get("c")   || "other";
 
     const isUp = vote === "up";
-    document.getElementById("icon").textContent     = isUp ? "👍" : "👎";
-    document.getElementById("headline").textContent = isUp
+    document.getElementById("icon").textContent      = isUp ? "👍" : "👎";
+    document.getElementById("headline").textContent  = isUp
       ? "You loved it!"
       : "Got it — we'll skip similar events.";
+    document.getElementById("event-title").textContent = eventTitle;
 
     async function recordVote() {
       const statusEl = document.getElementById("status");
@@ -109,29 +98,28 @@
             body: JSON.stringify({
               ref: "main",
               inputs: {
-                event_id: eventId,
-                vote: vote,
+                event_id:    eventId,
+                vote:        vote,
                 event_title: eventTitle,
-                category: category,
+                category:    category,
               },
             }),
           }
         );
 
         if (resp.status === 204) {
-          statusEl.className = "status success";
+          statusEl.className   = "status success";
           statusEl.textContent = "Vote recorded! Your preferences will shape next week's list.";
         } else {
           throw new Error(`GitHub responded with ${resp.status}`);
         }
       } catch (err) {
-        statusEl.className = "status error";
-        statusEl.textContent = `Could not save vote (${err.message}). Check the GITHUB_TOKEN in vote/index.html.`;
+        statusEl.className   = "status error";
+        statusEl.textContent = `Could not save vote (${err.message}). Check the GITHUB_TOKEN in docs/vote/index.html.`;
         console.error(err);
       }
     }
 
-    // Small delay so the UI feels intentional
     setTimeout(recordVote, 600);
   </script>
 </body>
