@@ -3,6 +3,7 @@ import os
 # --- API Keys (set as GitHub Secrets, or in a local .env for testing) ---
 TICKETMASTER_KEY = os.getenv("TICKETMASTER_API_KEY", "")
 NPS_KEY = os.getenv("NPS_API_KEY", "")
+SEATGEEK_CLIENT_ID = os.getenv("SEATGEEK_CLIENT_ID", "")  # free: seatgeek.com/account/develop
 
 # --- Email ---
 GMAIL_USER = os.getenv("GMAIL_USER", "dan.squillaro@gmail.com")

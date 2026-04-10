@@ -7,6 +7,8 @@ import sys
 import config
 from src.events.ticketmaster import fetch_ticketmaster_events
 from src.events.nps import fetch_nps_events
+from src.events.seatgeek import fetch_seatgeek_events
+from src.events.local_theaters import fetch_local_theater_events
 from src.events.aggregator import aggregate_events
 from src.scoring.scorer import score_and_sort
 from src.email.builder import build_email
@@ -24,11 +26,20 @@ def main() -> None:
 
     tm_events = fetch_ticketmaster_events(now, end)
     events.extend(tm_events)
-    print(f"  Ticketmaster: {len(tm_events)} events")
+    print(f"  Ticketmaster (general): {len(tm_events)} events")
+
+    print("  Local Theaters (by venue):")
+    theater_events = fetch_local_theater_events(now, end)
+    events.extend(theater_events)
+    print(f"  Local Theaters total: {len(theater_events)} events")
+
+    sg_events = fetch_seatgeek_events(now, end)
+    events.extend(sg_events)
+    print(f"  SeatGeek: {len(sg_events)} events")
 
     nps_events = fetch_nps_events(now, end)
     events.extend(nps_events)
-    print(f"  NPS: {len(nps_events)} events")
+    print(f"  NPS (parks/outdoor): {len(nps_events)} events")
 
     if not events:
         print("\nNo events found — check your API keys. Exiting.")
